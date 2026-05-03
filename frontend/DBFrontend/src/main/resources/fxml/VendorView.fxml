@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.amusementpark.VendorController"
+      styleClass="view-container"
+      spacing="20">
+    <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="Vendor Hub" styleClass="page-title"/>
+            <Label text="Manage food stall owners and rent tracking" styleClass="page-subtitle"/>
+        </VBox>
+        <Button text="+ Add Owner" styleClass="btn-primary" onAction="#handleAddOwner"/>
+        <Button text="+ Add Stall" styleClass="btn-secondary" onAction="#handleAddStall"/>
+    </HBox>
+
+    <!-- Owners Table -->
+    <VBox styleClass="card" spacing="12">
+        <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <Label text="Food Owners" styleClass="card-title" HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="ownerSearchField"
+                       promptText="Search owners..."
+                       styleClass="text-field-flat"
+                       prefWidth="220"
+                       onKeyReleased="#handleOwnerSearch"/>
+        </HBox>
+        <TableView fx:id="ownersTable" styleClass="flat-table" prefHeight="220">
+            <columns>
+                <TableColumn fx:id="colOwnerId"    text="ID"      prefWidth="60"  style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colOwnerFirst"  text="First"   prefWidth="130"/>
+                <TableColumn fx:id="colOwnerLast"   text="Last"    prefWidth="130"/>
+                <TableColumn fx:id="colOwnerEmail"  text="Email"   prefWidth="200"/>
+                <TableColumn fx:id="colOwnerPhone"  text="Phone"   prefWidth="140"/>
+                <TableColumn fx:id="colOwnerActions" text="Actions" prefWidth="140" style="-fx-alignment: CENTER;" sortable="false"/>
+            </columns>
+            <placeholder>
+                <Label text="No owners found." styleClass="table-placeholder"/>
+            </placeholder>
+        </TableView>
+    </VBox>
+
+    <!-- Stalls Table -->
+    <VBox styleClass="card" spacing="12" VBox.vgrow="ALWAYS">
+        <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <Label text="Food Stalls" styleClass="card-title" HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="stallSearchField"
+                       promptText="Search stalls..."
+                       styleClass="text-field-flat"
+                       prefWidth="220"
+                       onKeyReleased="#handleStallSearch"/>
+        </HBox>
+        <TableView fx:id="stallsTable" styleClass="flat-table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colStallId"      text="ID"       prefWidth="60"  style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colStallName"    text="Name"     prefWidth="150"/>
+                <TableColumn fx:id="colStallType"    text="Type"     prefWidth="110"/>
+                <TableColumn fx:id="colStallRent"    text="Rent (PKR)" prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
+                <TableColumn fx:id="colStallOpen"    text="Opens"    prefWidth="90"  style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colStallClose"   text="Closes"   prefWidth="90"  style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colStallOwner"   text="Owner"    prefWidth="150"/>
+                <TableColumn fx:id="colStallActions" text="Actions"  prefWidth="140" style="-fx-alignment: CENTER;" sortable="false"/>
+            </columns>
+            <placeholder>
+                <Label text="No stalls found." styleClass="table-placeholder"/>
+            </placeholder>
+        </TableView>
+    </VBox>
+</VBox>

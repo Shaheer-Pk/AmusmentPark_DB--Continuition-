@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.amusementpark.CinemaController"
+      styleClass="view-container"
+      spacing="20">
+
+    <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <VBox HBox.hgrow="ALWAYS" spacing="4">
+            <Label text="Cinema &amp; Screenings" styleClass="page-title"/>
+            <Label text="Manage movies, halls, and screening schedules" styleClass="page-subtitle"/>
+        </VBox>
+        <Button text="+ Add Screening" styleClass="btn-primary" onAction="#handleAdd"/>
+    </HBox>
+
+    <!-- Toolbar -->
+    <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="12">
+        <padding><Insets top="12" right="16" bottom="12" left="16"/></padding>
+        <TextField fx:id="searchField"
+                   promptText="Search by movie title..."
+                   styleClass="text-field-flat"
+                   prefWidth="300"
+                   onKeyReleased="#handleSearch"/>
+        <Button text="Search" styleClass="btn-secondary" onAction="#handleSearch"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="recordCountLabel" text="0 records" styleClass="record-count-label"/>
+    </HBox>
+
+    <!-- Table -->
+    <TableView fx:id="cinemaTable" styleClass="flat-table" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId"      text="ID"           prefWidth="60"  style="-fx-alignment: CENTER;"/>
+            <TableColumn fx:id="colTime"    text="Screening Time" prefWidth="180"/>
+            <TableColumn fx:id="colMovie"   text="Movie"         prefWidth="220"/>
+            <TableColumn fx:id="colHall"    text="Hall ID"       prefWidth="90"  style="-fx-alignment: CENTER;"/>
+            <TableColumn fx:id="colActions" text="Actions"       prefWidth="140" style="-fx-alignment: CENTER;" sortable="false"/>
+        </columns>
+        <placeholder>
+            <Label text="No screenings found. Click '+ Add Screening' to get started." styleClass="table-placeholder"/>
+        </placeholder>
+    </TableView>
+</VBox>
