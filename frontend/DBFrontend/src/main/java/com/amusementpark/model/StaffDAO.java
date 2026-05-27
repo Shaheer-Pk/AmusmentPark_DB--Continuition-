@@ -1,7 +1,5 @@
 package com.amusementpark.model;
 
-import com.amusementpark.model.Staff;
-
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;

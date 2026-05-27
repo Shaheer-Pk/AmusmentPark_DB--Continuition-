@@ -1,7 +1,5 @@
 package com.amusementpark.model;
 
-import com.amusementpark.model.Admin;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;

@@ -2,8 +2,6 @@ package com.amusementpark;
 
 import com.amusementpark.model.AdminDAO;
 import com.amusementpark.model.Admin;
-import com.amusementpark.AlertHelper;
-import com.amusementpark.SessionManager;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;

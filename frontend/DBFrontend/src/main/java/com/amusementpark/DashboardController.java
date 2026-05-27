@@ -2,7 +2,6 @@ package com.amusementpark;
 
 import com.amusementpark.model.DashboardDAO;
 import com.amusementpark.model.DashboardDAO.RevenueBreakdown;
-import com.amusementpark.AlertHelper;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;

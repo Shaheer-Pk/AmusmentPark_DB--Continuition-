@@ -1,7 +1,5 @@
 package com.amusementpark;
 
-import com.amusementpark.SessionManager;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;

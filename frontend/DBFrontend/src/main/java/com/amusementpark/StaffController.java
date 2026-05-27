@@ -2,7 +2,6 @@ package com.amusementpark;
 
 import com.amusementpark.model.StaffDAO;
 import com.amusementpark.model.Staff;
-import com.amusementpark.AlertHelper;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
