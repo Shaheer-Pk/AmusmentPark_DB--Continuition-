@@ -12,7 +12,7 @@ public class DatabaseConnection {
 
     private static final String DB_URL  = "jdbc:mysql://localhost:3306/amusementparkdb";
     private static final String USER    = "root";
-    private static final String PASS    = "9@55w0rdE()()A62()()5";
+    private static final String PASS    = "Shkvt907!";
 
     private static DatabaseConnection instance;
     private Connection connection;
