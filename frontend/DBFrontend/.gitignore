@@ -44,3 +44,6 @@ bin/
 
 ###DB config###
 db.properties
+
+### Notes ###
+notes.txt

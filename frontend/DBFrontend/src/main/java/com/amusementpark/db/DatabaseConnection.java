@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+//We just need one config per setup so fully static no objects
 class DBConfig {
 
     private static Properties properties = new Properties();
