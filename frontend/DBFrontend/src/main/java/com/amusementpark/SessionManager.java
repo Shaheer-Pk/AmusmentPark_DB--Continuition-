@@ -1,40 +1,38 @@
 package com.amusementpark;
 
-import com.amusementpark.model.Admin;
+import com.amusementpark.model.UserAccount;
 
 /**
- * SessionManager: simple singleton to carry the authenticated admin
- * across controllers without passing it through constructors.
- *
- * Set on login, clear on logout.
+ * SessionManager: Thread-safe singleton that tracks the authenticated user
+ * across all active UI controllers.
  */
 public class SessionManager {
 
     private static SessionManager instance;
-    private Admin currentAdmin;
+    private UserAccount currentUser;
 
     private SessionManager() {}
 
-    public static SessionManager getInstance() {
+    public static synchronized SessionManager getInstance() {
         if (instance == null) {
             instance = new SessionManager();
         }
         return instance;
     }
 
-    public void login(Admin admin) {
-        this.currentAdmin = admin;
+    public void login(UserAccount user) {
+        this.currentUser = user;
     }
 
-    public Admin getCurrentAdmin() {
-        return currentAdmin;
+    public UserAccount getCurrentUser() {
+        return currentUser;
     }
 
     public boolean isLoggedIn() {
-        return currentAdmin != null;
+        return currentUser != null;
     }
 
     public void logout() {
-        this.currentAdmin = null;
+        this.currentUser = null;
     }
 }
