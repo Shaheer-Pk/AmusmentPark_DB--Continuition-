@@ -8,11 +8,52 @@ import java.sql.SQLException;
  * Thread-safe singleton for MySQL connection.
  * Change DB_URL / USER / PASS to match your environment.
  */
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+class DBConfig {
+
+    private static Properties properties = new Properties();
+
+    static {
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream("db.properties");
+            properties.load(fis);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (fis != null) {
+                try{
+                    fis.close();
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static String getUrl() {
+        return properties.getProperty("db.URL");
+    }
+
+    public static String getUser() {
+        return properties.getProperty("db.USER");
+    }
+
+    public static String getPassword() {
+        return properties.getProperty("db.PASS");
+    }
+}
+
 public class DatabaseConnection {
 
-    private static final String DB_URL  = "jdbc:mysql://localhost:3306/amusementparkdb";
-    private static final String USER    = "root";
-    private static final String PASS    = "Shkvt907!";
+    private static final String DB_URL  = DBConfig.getUrl();
+    private static final String USER    = DBConfig.getUser();
+    private static final String PASS    = DBConfig.getPassword();
 
     private static DatabaseConnection instance;
     private Connection connection;

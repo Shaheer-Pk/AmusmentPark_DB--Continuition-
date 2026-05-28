@@ -1,0 +1,7 @@
+#Rename this file to db.properties to facilitate connection in DatabaseConnection.java
+#Replace your_username with your actual username
+#Replace your_password with your actual password
+
+db.URL = jdbc:mysql://localhost:3306/amusementparkdb
+db.USER = your_username            
+db.PASS = your_password            
