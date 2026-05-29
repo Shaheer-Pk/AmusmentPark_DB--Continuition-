@@ -48,7 +48,7 @@
                 <HBox alignment="CENTER" spacing="24" style="-fx-padding: 20 0 0 0;">
                     <VBox alignment="CENTER" spacing="6" style="-fx-padding: 16 32 16 32; -fx-background-color: -ap-bg; -fx-background-radius: 8;">
                         <Label text="Card Balance" style="-fx-font-size: 12px; -fx-text-fill: -ap-text-muted;"/>
-                        <Label text="$0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -ap-success;"/>
+                        <Label text="RS0.00" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -ap-success;"/>
                     </VBox>
                     <VBox alignment="CENTER" spacing="6" style="-fx-padding: 16 32 16 32; -fx-background-color: -ap-bg; -fx-background-radius: 8;">
                         <Label text="Reward Points" style="-fx-font-size: 12px; -fx-text-fill: -ap-text-muted;"/>

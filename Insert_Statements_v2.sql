@@ -1,33 +1,4 @@
-INSERT INTO Login (Name, Email, Password, isAdmin, Created_at) VALUES
-('Muhammad Saad',   'm.saad@park.com',   'x8Kp21aQ', true, '2024-01-10 09:00:00'),
-('Shahzaib Nazir', 'm.shahzaib@park.com', 'mN92pQw1', true, '2024-01-12 10:15:00'),
-('Rabia Nawaz',     'rabia.nawaz@park.com',     'vT55zLm9', true, '2024-01-14 11:30:00'),
-('Noman Aslam',     'noman.aslam@park.com',     'cR77uXk3', true, '2024-01-16 08:45:00'),
-('Hamza Ijaz',      'hamza.ijaz@park.com',      'pL10qWz8', false, '2024-02-01 13:00:00'),
-('Mariam Yousaf',   'mariam.yousaf@park.com',   'bY44nSa2', false, '2024-02-05 14:20:00'),
-('Danial Saeed',    'danial.saeed@park.com',    'hU66tVx7', false, '2024-02-10 16:00:00'),
-('Komal Riaz',      'komal.riaz@park.com',      'jK91mNb4', false, '2024-02-15 09:10:00'),
-('Shoaib Anwar',    'shoaib.anwar@park.com',    'dF33pQa6', false, '2024-03-01 11:00:00'),
-('Amna Ghafoor',    'amna.ghafoor@park.com',    'zX88cVt5', false, '2024-03-05 15:30:00'),
-('Rizwan Ali',      'rizwan.ali@park.com',      'nP12kLm9', false, '2024-03-08 12:45:00'),
-('Ahmed Raza',      'ahmed.raza@park.com',      'sA44dFg1', false, '2024-03-12 10:00:00'),
-('Khalid Hussain',    'khalid.hussain@park.com',    'mJ21vBn7', false, '2024-03-13 10:00:00'),
-('Nargis bibi',  'nargis.bibi@park.com',  'fJ88kLp3', false, '2024-03-13 10:00:00');
-
-
-INSERT INTO Customer (First_Name, Last_Name, Type, Date_of_Birth) VALUES
-('Ahmed',  'Raza',    'Daypass',      '1990-04-15'),
-('Sara',   'Khan',    'Subscription', '1985-07-22'),
-('Ali',    'Hassan',  'Daypass',      '1995-11-08'),
-('Fatima', 'Noor',    'Subscription', '1992-03-30'),
-('Bilal',  'Akhtar',  'Daypass',      '1998-06-17'),
-('Zainab', 'Malik',   'Subscription', '1988-09-25'),
-('Usman',  'Tariq',   'Daypass',      '1993-01-12'),
-('Hira',   'Qureshi', 'Subscription', '2000-05-03'),
-('Kamran', 'Javed',   'Daypass',      '1987-12-19'),
-('Nadia',  'Hussain', 'Subscription', '1996-08-07'),
-('Imran',  'Sheikh',  'Daypass',      '1991-02-28'),
-('Sana',   'Baig',    'Subscription', '1999-10-14');
+-- No need for any hard-coded inserts related to Login, Customer And Card, as they are all automated and handled with the new signup system
 
 INSERT INTO Cinema (Capacity) VALUES
 (120),
@@ -81,20 +52,6 @@ INSERT INTO Job_Post (Location_Name, StaffID) VALUES
 ('Male Washrooms',    5),
 ('Female Washrooms',  6);
 
-INSERT INTO Card (Balance, Points, CustomerID) VALUES
-(5000.00, 200,  1),
-(12000.00, 850, 2),
-(3500.00, 100,  3),
-(7500.00, 400,  4),
-(2000.00, 50,   5),
-(9000.00, 600,  6),
-(4500.00, 250,  7),
-(1500.00, 30,   8),
-(11000.00, 750, 9),
-(3000.00, 120,  10),
-(6000.00, 320,  11),
-(800.00,  10,   12);
-
 INSERT INTO Ride (Ride_Name, Status, OperatorID) VALUES
 ('Roller Coaster',   1, 7),
 ('Ferris Wheel',     1, 8),
@@ -109,36 +66,6 @@ INSERT INTO Ride (Ride_Name, Status, OperatorID) VALUES
 ('Water Slides',     1, 17),
 ('Zip Line',         0, 18);
 
-INSERT INTO Card_Payment (Amount, Date, CardID, RideID) VALUES
-(500.00, '2024-03-01', 1, 1),
-(300.00, '2024-03-02', 2, 2),
-(250.00, '2024-03-03', 3, 3),
-(500.00, '2024-03-04', 4, 1),
-(350.00, '2024-03-05', 5, 5),
-(200.00, '2024-03-06', 6, 6),
-(500.00, '2024-03-07', 7, 7),
-(300.00, '2024-03-08', 8, 9),
-(250.00, '2024-03-09', 9, 10),
-(400.00, '2024-03-10', 10, 11),
-(350.00, '2024-03-11', 11, 3),
-(200.00, '2024-03-12', 12, 6);
-
-
-INSERT INTO Bowling_Booking (Lane_Number, Time, Amount, CardID) VALUES
-(1, '2024-03-01 10:00:00', 800.00, 1),
-(2, '2024-03-02 11:30:00', 800.00, 2),
-(3, '2024-03-03 14:00:00', 1000.00, 3),
-(4, '2024-03-04 16:00:00', 800.00, 4),
-(1, '2024-03-05 10:30:00', 800.00, 5),
-(2, '2024-03-06 12:00:00', 1000.00, 6),
-(3, '2024-03-07 15:00:00', 800.00, 7),
-(5, '2024-03-08 17:00:00', 800.00, 8),
-(4, '2024-03-09 11:00:00', 1000.00, 9),
-(6, '2024-03-10 13:30:00', 800.00, 10),
-(1, '2024-03-11 09:30:00', 800.00, 11),
-(2, '2024-03-12 18:00:00', 1000.00, 12);
-
-
 INSERT INTO Screening (Screening_Time, MovieID, HallID) VALUES
 ('2024-03-01 10:00:00', 1, 1),
 ('2024-03-02 10:00:00', 5, 1),
@@ -152,20 +79,6 @@ INSERT INTO Screening (Screening_Time, MovieID, HallID) VALUES
 ('2024-03-01 19:00:00', 4, 4),
 ('2024-03-02 19:00:00', 8, 4),
 ('2024-03-03 19:00:00', 12, 4);
-
-INSERT INTO Ticketing (Amount, CardID, ScreeningID) VALUES
-(650.00,  1,  1),
-(650.00,  2,  2),
-(700.00,  3,  3),
-(700.00,  4,  4),
-(650.00,  5,  5),
-(700.00,  6,  6),
-(650.00,  7,  7),
-(650.00,  8,  8),
-(700.00,  9,  9),
-(650.00,  10, 10),
-(650.00,  11, 11),
-(700.00,  12, 12);
 
 INSERT INTO Food_Owner (First_Name, Last_Name, Email, Phone) VALUES
 ('Zubair', 'Khan', 'zubair.khan@email.com', '03214567890'),
