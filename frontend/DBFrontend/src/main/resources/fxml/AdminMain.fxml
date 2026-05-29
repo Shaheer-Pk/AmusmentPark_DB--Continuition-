@@ -7,13 +7,13 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.amusementpark.MainController"
+            fx:controller="com.amusementpark.AdminMainController"
             styleClass="root-pane"
             prefWidth="1280" prefHeight="800">
 
     <!-- ── LEFT SIDEBAR ──────────────────────────────────────────────────── -->
     <left>
-        <VBox styleClass="sidebar" prefWidth="230" spacing="4">
+        <VBox styleClass="sidebar" prefWidth="260" spacing="4">
             <padding><Insets top="0" right="0" bottom="16" left="0"/></padding>
 
             <!-- Logo / App name -->

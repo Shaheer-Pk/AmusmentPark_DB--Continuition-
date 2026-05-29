@@ -15,7 +15,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class MainController implements Initializable {
+public class AdminMainController implements Initializable {
 
     @FXML private Button navDashboard;
     @FXML private Button navStaff;
@@ -36,12 +36,13 @@ public class MainController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         navButtons = List.of(navDashboard, navStaff, navRides, navBowling, navCinema, navCRM, navVendors);
 
-        var admin = SessionManager.getInstance().getCurrentAdmin();
-        if (admin != null) {
-            adminNameLabel.setText(admin.getName());
-            adminEmailLabel.setText(admin.getEmail());
+        var user = SessionManager.getInstance().getCurrentUser();
+        if (user != null) {
+            adminNameLabel.setText(user.getFullName());
+            adminEmailLabel.setText(user.getEmail());
         }
 
+        //Default load after setting up initially
         showDashboard();
     }
 

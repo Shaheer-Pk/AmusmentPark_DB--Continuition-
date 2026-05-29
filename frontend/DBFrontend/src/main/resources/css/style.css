@@ -568,3 +568,36 @@
 .scroll-pane .viewport {
     -fx-background-color: transparent;
 }
+
+/* ── ADDITIONAL AUTH INTERFACE EXTENSIONS ───────────────────── */
+.date-picker {
+    -fx-background-color: transparent;
+}
+.date-picker .arrow-button {
+    -fx-background-color: -ap-border;
+    -fx-background-radius: 0 6px 6px 0;
+    -fx-cursor: hand;
+}
+.date-picker .arrow-button:hover {
+    -fx-background-color: -ap-accent-light;
+}
+.check-box .box {
+    -fx-background-color: -ap-surface;
+    -fx-border-color: -ap-border;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+.check-box:selected .box {
+    -fx-background-color: -ap-accent;
+    -fx-border-color: -ap-accent;
+}
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+.hyperlink {
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+.hyperlink:hover {
+    -fx-text-fill: -ap-accent-hover;
+}

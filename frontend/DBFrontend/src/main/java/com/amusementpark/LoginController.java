@@ -1,118 +1,218 @@
 package com.amusementpark;
 
-import com.amusementpark.model.AdminDAO;
-import com.amusementpark.model.Admin;
-
+import com.amusementpark.model.UserDAO;
+import com.amusementpark.model.UserAccount;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDate;
 
 public class LoginController {
 
-    @FXML private TextField     emailField;
+    // Common Elements
+    @FXML private Label loginHeaderTitle;
+    @FXML private Label loginHeaderSubtitle;
+    @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
-    @FXML private Label         errorLabel;
-    @FXML private Button        loginButton;
+    @FXML private Label errorLabel;
+    @FXML private Button primaryActionButton;
+    @FXML private Label toggleModeLabel;
+    @FXML private Hyperlink toggleModeLink;
 
-    private final AdminDAO adminDAO = new AdminDAO();
+    // Registration UI Container Elements
+    @FXML private VBox signUpFieldsContainer;
+    @FXML private TextField firstNameField;
+    @FXML private TextField lastNameField;
+    @FXML private DatePicker dobPicker;
+
+    // Administrative Validation Controls
+    @FXML private VBox adminPrivilegeContainer;
+    @FXML private CheckBox adminCheckBox;
+    @FXML private VBox masterKeyContainer;
+    @FXML private PasswordField masterKeyField;
+
+    private final UserDAO userDAO = new UserDAO();
+    private final BooleanProperty signUpModeProperty = new SimpleBooleanProperty(false);
+    
+    // Constant key required to provision system level admins
+    private static final String MASTER_CLEARANCE_KEY = "APEX2026";
 
     @FXML
-    private void handleLogin() {
-        String email    = emailField.getText().trim();
+    public void initialize() {
+        // 1. Bind registration containers visibility and height management together
+        signUpFieldsContainer.visibleProperty().bind(signUpModeProperty);
+        signUpFieldsContainer.managedProperty().bind(signUpFieldsContainer.visibleProperty());
+
+        adminPrivilegeContainer.visibleProperty().bind(signUpModeProperty);
+        adminPrivilegeContainer.managedProperty().bind(adminPrivilegeContainer.visibleProperty());
+
+        // 2. Master key panel opens only if registration is active AND admin option is toggled
+        masterKeyContainer.visibleProperty().bind(adminCheckBox.selectedProperty().and(signUpModeProperty));
+        masterKeyContainer.managedProperty().bind(masterKeyContainer.visibleProperty());
+    }
+
+    @FXML
+    private void handleToggleMode() {
+        // Switch the boolean status flag
+        signUpModeProperty.set(!signUpModeProperty.get());
+        errorLabel.setText("");
+        
+        if (signUpModeProperty.get()) {
+            loginHeaderTitle.setText("Create Account");
+            loginHeaderSubtitle.setText("Join Apex Park Management Systems");
+            primaryActionButton.setText("Sign Up");
+            toggleModeLabel.setText("Already have an account?");
+            toggleModeLink.setText("Sign In");
+        } else {
+            loginHeaderTitle.setText("Sign In");
+            loginHeaderSubtitle.setText("Access your Apex Park workspace");
+            primaryActionButton.setText("Sign In");
+            toggleModeLabel.setText("Don't have an account?");
+            toggleModeLink.setText("Sign Up");
+        }
+    }
+
+    @FXML
+    private void handlePrimaryAction() {
+        errorLabel.setText("");
+        String email = emailField.getText().trim();
         String password = passwordField.getText();
 
-        // ── Client-side validation ───────────────────────────────────────
+        if (signUpModeProperty.get()) {
+            executeRegistrationFlow(email, password);
+        } else {
+            executeAuthenticationFlow(email, password);
+        }
+    }
+
+    private void executeAuthenticationFlow(String email, String password) {
         if (email.isEmpty() || password.isEmpty()) {
-            showError("Email and password are required.");
+            errorLabel.setText("Email and password fields are required.");
             return;
         }
 
-        // ── Async DB auth — never block the FX thread ───────────────────
-        loginButton.setDisable(true);
-        loginButton.setText("Signing in…");
-        errorLabel.setText("");
+        primaryActionButton.setDisable(true);
+        primaryActionButton.setText("Verifying credentials...");
 
-        Task<Admin> authTask = new Task<>() {
+        Task<UserAccount> loginTask = new Task<>() {
             @Override
-            protected Admin call() throws SQLException {
-                return adminDAO.authenticate(email, password);
+            protected UserAccount call() throws SQLException {
+                return userDAO.authenticate(email, password);
             }
         };
 
-        authTask.setOnSucceeded(e -> {
-            Admin admin = authTask.getValue();
-            if (admin == null) {
-                showError("Invalid email or password.");
-                resetButton();
+        loginTask.setOnSucceeded(e -> {
+            UserAccount account = loginTask.getValue();
+            if (account != null) {
+                SessionManager.getInstance().login(account);
+                navigateToDashboard(account.isIsAdmin());
             } else {
-                SessionManager.getInstance().login(admin);
-                loadMainShell();
+                errorLabel.setText("Invalid email address or security password.");
+                resetActionButton("Sign In");
             }
         });
 
-        authTask.setOnFailed(e -> {
-            Throwable cause = authTask.getException();
-            if (cause instanceof SQLException) {
-                showError("Database error: " + cause.getMessage());
-            } else {
-                showError("Unexpected error. Check your connection.");
-            }
-            resetButton();
+        loginTask.setOnFailed(e -> {
+            errorLabel.setText("Database access timeout. Check connection pools.");
+            resetActionButton("Sign In");
         });
 
-        new Thread(authTask, "auth-thread").start();
+        new Thread(loginTask).start();
     }
 
-    private void loadMainShell() {
-        try {
-            URL mainUrl = getClass().getResource("/fxml/Main.fxml");
-            URL style   = getClass().getResource("/css/style.css");
+    private void executeRegistrationFlow(String email, String password) {
+        String fName = firstNameField.getText().trim();
+        String lName = lastNameField.getText().trim();
+        LocalDate dob = dobPicker.getValue();
 
-            FXMLLoader loader = new FXMLLoader(mainUrl);
-            loader.setLocation(mainUrl);
-            Scene scene = new Scene(loader.load(), 1280, 800);
+        // Structural UI Validation
+        if (fName.isEmpty() || lName.isEmpty() || dob == null || email.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("All profile fields are mandatory for setup.");
+            return;
+        }
 
-            if (style != null) {
-                scene.getStylesheets().add(style.toExternalForm());
+        if (password.length() < 6) {
+            errorLabel.setText("Password security constraint unmet. Minimum 6 characters required.");
+            return;
+        }
+
+        // Administrative Layer Guard Block
+        boolean registerAsAdmin = adminCheckBox.isSelected();
+        if (registerAsAdmin) {
+            String validationKey = masterKeyField.getText();
+            if (!MASTER_CLEARANCE_KEY.equals(validationKey)) {
+                errorLabel.setText("Security Rejection: Administrative Master Clearance Key is incorrect.");
+                return;
+            }
+        }
+
+        primaryActionButton.setDisable(true);
+        primaryActionButton.setText("Provisioning account...");
+
+        Task<Boolean> registerTask = new Task<>() {
+            @Override
+            protected Boolean call() throws SQLException {
+                return userDAO.registerUser(fName, lName, dob, email, password, registerAsAdmin);
+            }
+        };
+
+        registerTask.setOnSucceeded(e -> {
+            AlertHelper.showInfo("Registration Successful", "Account created securely. You may now sign in.");
+            handleToggleMode(); // Automatically drop them back onto clean login layout screen
+            resetActionButton("Sign In");
+        });
+
+        registerTask.setOnFailed(e -> {
+            Throwable err = registerTask.getException();
+            if (err != null && err.getMessage().contains("Duplicate entry")) {
+                errorLabel.setText("An account with that email address already exists.");
             } else {
-                System.out.println("WARNING: style.css not found on classpath");
+                errorLabel.setText("Transaction Processing Error: Operation aborted cleanly.");
             }
+            resetActionButton("Sign Up");
+        });
 
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Apex Park — Admin Console");
-        } catch (IOException ex) {
-            System.out.println("=== Load failed ===");
-            System.out.println(ex.getMessage());
-            Throwable cause = ex.getCause();
-            while (cause != null) {
-                System.out.println("Caused by: " + cause);
-                for (StackTraceElement e : cause.getStackTrace()) {
-                    System.out.println("  " + e.getLineNumber() + " " + e.getMethodName());
-                }
-                cause = cause.getCause();
-            }
-        } //catch (NullPointerException ex) {
-//            System.out.println(ex.toString());
-//        }
+        new Thread(registerTask).start();
     }
 
-    private void showError(String msg) {
-        Platform.runLater(() -> errorLabel.setText(msg));
-    }
-
-    private void resetButton() {
+    private void navigateToDashboard(boolean isAdmin) {
         Platform.runLater(() -> {
-            loginButton.setDisable(false);
-            loginButton.setText("Sign In");
+            try {
+                // Dual path selection route diverter
+                String targetFxml = isAdmin ? "/fxml/AdminMain.fxml" : "/fxml/CustomerMain.fxml";
+                String windowTitle = isAdmin ? "Apex Park — Admin Management Console" : "Apex Park — Customer Digital Portal";
+
+                URL fxmlUrl = getClass().getResource(targetFxml);
+                URL cssUrl = getClass().getResource("/css/style.css");
+
+                FXMLLoader loader = new FXMLLoader(fxmlUrl);
+                Scene scene = new Scene(loader.load(), 1280, 800);
+                if (cssUrl != null) scene.getStylesheets().add(cssUrl.toExternalForm());
+
+                Stage stage = (Stage) primaryActionButton.getScene().getWindow();
+                stage.setScene(scene);
+                stage.setTitle(windowTitle);
+                stage.centerOnScreen();
+            } catch (IOException ex) {
+                errorLabel.setText("System Routing Failure: Unable to paint target container panel context.");
+                ex.printStackTrace();
+            }
         });
+    }
+
+    private void resetActionButton(String originalText) {
+        primaryActionButton.setDisable(false);
+        primaryActionButton.setText(originalText);
     }
 }
