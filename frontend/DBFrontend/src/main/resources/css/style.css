@@ -69,8 +69,8 @@
 }
 
 .sidebar-divider {
-    -fx-background-color: #1E293B;
-    -fx-border-color: #1E293B;
+    -fx-background-color: #262729;
+    -fx-border-color: #0e1c31;
     -fx-padding: 0;
 }
 
@@ -509,7 +509,7 @@
 }
 
 .login-heading {
-    -fx-font-size: 26px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: -ap-text;
 }

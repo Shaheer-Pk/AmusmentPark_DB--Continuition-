@@ -1,0 +1,251 @@
+AMUSEMENT PARK MANAGEMENT SYSTEM
+ARCHITECTURE NOTES
+VERSION 1
+
+============================================================
+CORE DESIGN PHILOSOPHY
+======================
+
+The system uses RBAC (Role Based Access Control).
+
+Roles do not directly control frontend screens.
+
+Permissions control frontend functionality.
+
+Roles are only collections of permissions.
+
+A user may have multiple roles simultaneously.
+
+Example:
+
+UserID = 5
+
+Roles:
+
+* Staff
+* FinanceManager
+* RideOperator
+
+The user's effective permissions are the UNION of all
+permissions assigned to all roles.
+
+============================================================
+DATABASE RESPONSIBILITIES
+=========================
+
+Login table:
+Authentication only.
+
+Responsible for:
+
+* Email
+* Password Hash
+
+Not responsible for:
+
+* Roles
+* Permissions
+* Authorization
+
+Authorization is handled entirely through:
+
+Role
+UserRole
+Permission
+RolePermission
+
+============================================================
+EMPLOYEE MODEL
+==============
+
+Every employee MUST have:
+
+User
+UserRole
+Staff
+
+Example:
+
+User
+-> Staff
+-> FinanceManager
+
+Vendor and Customer accounts do not require a Staff row.
+
+============================================================
+ROLE HIERARCHY CONCEPT
+======================
+
+Admin is NOT inherited automatically.
+
+Instead:
+
+Admin users explicitly receive:
+
+Admin
+Staff
+
+This ensures all employees can be found through
+the Staff role.
+
+============================================================
+PERMISSION DRIVEN FRONTEND
+==========================
+
+FXML screens must not be chosen by role.
+
+FXML functionality must be enabled by permissions.
+
+Incorrect:
+
+if(Admin)
+
+Correct:
+
+if(hasPermission("VIEW_REVENUE"))
+
+Example:
+
+FinanceManager:
+
+* VIEW_REVENUE
+
+Admin:
+
+* VIEW_REVENUE
+
+Both see revenue functionality.
+
+No special Admin code required.
+
+============================================================
+SESSION MANAGEMENT
+==================
+
+After successful login:
+
+1. Authenticate email/password
+2. Load user
+3. Load roles
+4. Load permissions
+5. Store in SessionManager
+
+SessionManager contains:
+
+Current User
+Assigned Roles
+Assigned Permissions
+
+Controllers query SessionManager.
+
+============================================================
+CONTROLLER RESPONSIBILITIES
+===========================
+
+Controllers enforce permissions.
+
+Example:
+
+if(hasPermission("DELETE_STAFF"))
+{
+deleteButton.setVisible(true);
+}
+
+else
+{
+deleteButton.setVisible(false);
+}
+
+DAO classes must NEVER enforce UI permissions.
+
+============================================================
+DAO RESPONSIBILITIES
+====================
+
+DAO classes perform database operations only.
+
+Examples:
+
+UserDAO
+StaffDAO
+RideDAO
+CinemaDAO
+BowlingDAO
+VendorDAO
+CardDAO
+
+DAO classes are universal.
+
+There will NOT be:
+
+AdminRideDAO
+VendorRideDAO
+FinanceRideDAO
+
+Permissions are handled before DAO execution.
+
+============================================================
+STORED PROCEDURE PHILOSOPHY
+===========================
+
+Business logic belongs in stored procedures.
+
+Examples:
+
+PurchaseRide()
+
+PurchaseTicket()
+
+StartBowlingSession()
+
+RechargeCard()
+
+Java controllers should call procedures.
+
+Java should NOT manually:
+
+* Deduct balance
+* Insert ledger entries
+* Create ride usage entries
+
+Database procedures remain the source of truth.
+
+============================================================
+SCALABILITY REQUIREMENT
+=======================
+
+Adding a new role should require:
+
+1. Insert Role
+2. Assign Permissions
+
+No Java redesign.
+
+No schema redesign.
+
+No controller redesign.
+
+Example:
+
+SecurityOfficer
+
+Requires only:
+
+Role Insert
+RolePermission Inserts
+
+System automatically adapts.
+
+============================================================
+LONG TERM GOAL
+==============
+
+Frontend is assembled from permissions.
+
+Roles become reusable permission bundles.
+
+The system should support unlimited future roles
+without requiring database redesign.
+
+If adding a new role requires code changes,
+the RBAC implementation has failed.

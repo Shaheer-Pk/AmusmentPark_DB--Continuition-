@@ -1,20 +1,122 @@
-## Note
-This is a personal continuation of the Database Project by Shaheer Hasan Khan
 
-## Database project of BSCS15-D
+# 🎡 Amusement Park Management System
 
-This database system is designed to centralize and manage all operational data for an amusement facility. It encompasses information related to employees, their assigned workstations, rides, bowling alley, and cinema operations. Additionally, the system maintains customer records and amusement card details to effectively track user activities and transactions. The primary objective is to deliver a reliable and scalable solution that enhances organization, streamlines data access, and improves overall operational efficiency, thereby supporting informed decision-making. It includes a web based frontend that is user friendly and provides reliable and relevant data for the administration team.
+## Overview
+This system is a JavaFX + MySQL-based amusement park management platform with:
+- RBAC-based security
+- Card-based payment system
+- Entertainment modules (rides, cinema, bowling)
+- Vendor leasing system
+- Central financial ledger
 
-### Group members: 
+---
 
-Shaheer Hassan Khan (Team Lead)
+## 🧠 Architecture Principles
 
-Agha Waleed Hassan
+### 1. Separation of Concerns
+- User/Login → Authentication
+- Role/Permission → Authorization
+- Domain tables → Business logic
+- CardTransaction → Financial truth
 
-Muhammad Shahzaib Nazir
+---
 
-Muhammad Saad
+### 2. RBAC Model
+Access is controlled via:
 
-Noor Fatima
+User → UserRole → Role → RolePermission → Permission
 
-Fatima Haroon
+No boolean flags are used for authorization.
+
+---
+
+## 🗄️ Data Categories
+
+### 🔹 Static Data (Preloaded via seed_data.sql)
+These are inserted manually before system startup:
+If you want to expand the database you can add your own roles and assign permissions accordingly
+
+- Roles
+- Permissions
+- Movies
+- Cinema Halls
+- Seats
+- Rides
+- Bowling Lanes
+- Food Places
+
+---
+
+### 🔸 Dynamic Data (Runtime Generated)
+
+- Users
+- Login entries
+- Card balances
+- Tickets
+- Ride usage logs
+- Bowling sessions
+- Contracts
+- Food stalls
+- Card transactions
+
+---
+
+## 💰 Financial System
+
+### CardTransaction
+Single source of truth for all money movement:
+
+Triggered by:
+- Ride usage
+- Ticket purchase
+- Bowling session
+- Card recharge
+
+Never manually inserted.
+
+---
+
+## 🔐 RBAC Rules
+
+### Roles:
+- Admin
+- Staff
+- Vendor
+- Customer
+
+### Permissions:
+Examples:
+- VIEW_REVENUE
+- EDIT_STAFF
+- MANAGE_RIDES
+- BOOK_TICKET
+
+Roles are mapped to permissions dynamically.
+
+---
+
+## ⚠️ System Rules
+
+- No boolean-based authorization
+- No direct role checks in UI
+- No manual financial ledger edits
+- No duplication of static data at runtime
+
+---
+
+## 🚀 Initialization Flow
+
+1. Run Tables_v1.sql
+2. Run seed_data_v2.sql
+3. Run Triggered_Stored_Procedures_v3.sql
+4. Start JavaFX application
+5. Users register and interact dynamically
+
+---
+
+## 🎯 Design Goal
+
+A scalable, RBAC-driven amusement park system with:
+- clean separation of concerns
+- permission-based UI control
+- consistent financial tracking

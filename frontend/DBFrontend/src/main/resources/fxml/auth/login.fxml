@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<!--
+    login.fxml — paired with AuthController.java
+
+    LAYOUT: StackPane root → HBox split
+      LEFT  — login-brand-panel  (dark sidebar, branding)
+      RIGHT — login-form-panel   (light background, login-card with form)
+
+    CSS CLASSES: all verified against style.css
+      login-brand-panel, login-brand-icon, login-brand-title
+      login-brand-subtitle, login-brand-tagline
+      login-form-panel, login-card
+      login-heading, login-subheading
+      field-label, text-field-flat
+      btn-primary, btn-logout (repurposed for signup outline style)
+      error-label, login-version
+      hyperlink (for "Sign up" toggles)
+
+    FX:ID → AuthController:
+      emailField, passwordField
+
+    ACTIONS → AuthController:
+      handleLogin(), handleCustomerSignup(), handleVendorSignup()
+-->
+
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.amusementpark.controller.AuthController"
+           styleClass="root-pane">
+
+    <HBox>
+
+        <!-- ── LEFT: Brand Panel ──────────────────────────────────────── -->
+        <VBox styleClass="login-brand-panel"
+              alignment="CENTER"
+              spacing="0"
+              HBox.hgrow="ALWAYS">
+
+            <Label text="🎡" styleClass="login-brand-icon"/>
+            <Label text="APEX PARK" styleClass="login-brand-title"/>
+            <Label text="Management System" styleClass="login-brand-subtitle"/>
+            <Label text="Experience everything. Manage everything."
+                   styleClass="login-brand-tagline"
+                   wrapText="true"
+                   maxWidth="280"
+                   style="-fx-text-alignment: CENTER;"/>
+
+        </VBox>
+
+        <!-- ── RIGHT: Form Panel ──────────────────────────────────────── -->
+        <VBox styleClass="login-form-panel"
+              alignment="CENTER"
+              HBox.hgrow="ALWAYS">
+
+            <ScrollPane fitToWidth="true"
+                        maxWidth="480"
+                        style="-fx-background-color: transparent;
+                               -fx-background: transparent;
+                               -fx-border-color: transparent;">
+
+                <VBox styleClass="login-card"
+                      alignment="CENTER_LEFT"
+                      spacing="0">
+                    <padding>
+                        <Insets top="40" right="40" bottom="40" left="40"/>
+                    </padding>
+
+                    <!-- Heading -->
+                    <Label text="Welcome Back" styleClass="login-heading"/>
+                    <Label text="Sign in to your Apex Park account"
+                           styleClass="login-subheading"/>
+
+                    <!-- Email -->
+                    <VBox spacing="6" style="-fx-padding: 24 0 0 0;">
+                        <Label text="Email Address" styleClass="field-label"/>
+                        <TextField fx:id="emailField"
+                                   promptText="name@domain.com"
+                                   styleClass="text-field-flat"/>
+                    </VBox>
+
+                    <!-- Password -->
+                    <VBox spacing="6" style="-fx-padding: 14 0 0 0;">
+                        <Label text="Password" styleClass="field-label"/>
+                        <PasswordField fx:id="passwordField"
+                                       promptText="••••••••"
+                                       styleClass="text-field-flat"/>
+                    </VBox>
+
+                    <!-- Error label — empty until AuthController sets it -->
+                    <Label styleClass="error-label"
+                           wrapText="true"
+                           style="-fx-padding: 10 0 0 0;"/>
+
+                    <!-- Login button -->
+                    <Button text="Sign In"
+                            styleClass="btn-primary"
+                            maxWidth="Infinity"
+                            defaultButton="true"
+                            onAction="#handleLogin"
+                            style="-fx-padding: 14 0 14 0; -fx-font-size: 14px;">
+                        <VBox.margin>
+                            <Insets top="20"/>
+                        </VBox.margin>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Separator style="-fx-padding: 20 0 0 0;">
+                        <VBox.margin><Insets top="24" bottom="20"/></VBox.margin>
+                    </Separator>
+
+                    <!-- Signup section -->
+                    <Label text="Don't have an account?"
+                           style="-fx-text-fill: -ap-text-muted;
+                                  -fx-font-size: 13px;
+                                  -fx-padding: 0 0 12 0;"/>
+
+                    <!-- Sign up as Customer -->
+                    <Button text="Create Customer Account"
+                            styleClass="btn-secondary"
+                            maxWidth="Infinity"
+                            onAction="#handleCustomerSignup"
+                            style="-fx-padding: 11 0 11 0; -fx-font-size: 13px;"/>
+
+                    <!-- Sign up as Vendor -->
+                    <Button text="Apply as Vendor"
+                            styleClass="btn-secondary"
+                            maxWidth="Infinity"
+                            onAction="#handleVendorSignup"
+                            style="-fx-padding: 11 0 11 0; -fx-font-size: 13px;">
+                        <VBox.margin><Insets top="10"/></VBox.margin>
+                    </Button>
+
+                    <!-- Version footer -->
+                    <Label text="Apex Park Management System v1.0"
+                           styleClass="login-version"
+                           maxWidth="Infinity"
+                           style="-fx-alignment: CENTER; -fx-text-alignment: CENTER;">
+                        <VBox.margin><Insets top="28"/></VBox.margin>
+                    </Label>
+
+                </VBox>
+            </ScrollPane>
+        </VBox>
+
+    </HBox>
+</StackPane>

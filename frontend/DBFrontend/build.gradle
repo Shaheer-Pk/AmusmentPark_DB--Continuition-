@@ -32,6 +32,7 @@ dependencies {
 
     implementation 'com.mysql:mysql-connector-j:9.0.0'
     implementation 'org.mindrot:jbcrypt:0.4'        //The encryption dependency
+    implementation 'com.zaxxer:HikariCP:7.0.2'      // The hikariCP implementation (for connection pool to enable effective multi-threading)
 }
 
 application {

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<!--
+    dashboard.fxml — paired with DashboardController.java
+
+    LAYOUT: BorderPane
+    ┌─────────────────────────────────────────────────────┐
+    │  LEFT — VBox sidebar (dark, permanent)              │
+    ├──────────────────────────────────────────────────────┤
+    │  CENTER — AnchorPane contentArea (panels inject here)│
+    └──────────────────────────────────────────────────────┘
+
+    The sidebar handles branding, user identity, nav buttons,
+    and logout — all in one vertical strip.
+    No separate top header bar — cleaner and closer to the old design.
+
+    CSS CLASSES: all verified against style.css
+      sidebar, sidebar-header, sidebar-app-name, sidebar-app-sub
+      sidebar-admin-name, sidebar-admin-email
+      sidebar-divider, sidebar-footer
+      nav-btn, nav-section-label
+      content-area
+
+    FX:ID → DashboardController:
+      userNameLabel, contentArea
+      navHome, navRides, navCinema, navBowling
+      navMyCard, navMyStall, navProfile
+      navCardMgmt, navFinance, navStaff
+      navVendors, navReports, navSystem
+
+    ACTIONS → DashboardController:
+      onNavHome through onNavSystem, handleLogout
+-->
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.amusementpark.controller.DashboardController"
+            styleClass="root-pane"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- ── LEFT: Sidebar ────────────────────────────────────────────── -->
+    <left>
+        <VBox styleClass="sidebar"
+              prefWidth="220"
+              minWidth="220"
+              maxWidth="220"
+              spacing="2">
+
+            <!-- Brand header -->
+            <VBox styleClass="sidebar-header" spacing="2">
+                <padding><Insets top="24" right="16" bottom="16" left="16"/></padding>
+                <Label text="🎡  APEX PARK" styleClass="sidebar-app-name"/>
+                <Label text="MANAGEMENT SYSTEM" styleClass="sidebar-app-sub"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-divider"/>
+
+            <!-- Logged-in user identity block -->
+            <VBox spacing="2" style="-fx-padding: 14 16 14 16;">
+                <Label fx:id="userNameLabel"
+                       styleClass="sidebar-admin-name"
+                       text="Loading..."/>
+                <Label styleClass="sidebar-admin-email"
+                       text="Active Session"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-divider"/>
+
+            <!-- Nav buttons — shown/hidden by DashboardController.initialize() -->
+            <ScrollPane fitToWidth="true"
+                        VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent;
+                               -fx-background: transparent;
+                               -fx-border-color: transparent;">
+                <VBox spacing="2">
+                    <padding><Insets top="8" right="8" bottom="8" left="8"/></padding>
+
+                    <!-- Always visible
+                         fx:id (var) looks for a VARIABLE in fx:controller file named (var)
+                         # (var) looks for a METHOD in fx:controller file named (var)-->
+                    <Button fx:id="navHome"
+                            styleClass="nav-btn" text="🏠   Home"
+                            maxWidth="Infinity" onAction="#onNavHome"/>
+
+                    <Label text="ENTERTAINMENT" styleClass="nav-section-label">
+                        <VBox.margin><Insets top="10" bottom="2"/></VBox.margin>
+                    </Label>
+
+                    <Button fx:id="navRides"
+                            styleClass="nav-btn" text="🎢   Rides"
+                            maxWidth="Infinity" onAction="#onNavRides"/>
+
+                    <Button fx:id="navCinema"
+                            styleClass="nav-btn" text="🎬   Cinema"
+                            maxWidth="Infinity" onAction="#onNavCinema"/>
+
+                    <Button fx:id="navBowling"
+                            styleClass="nav-btn" text="🎳   Bowling"
+                            maxWidth="Infinity" onAction="#onNavBowling"/>
+
+                    <Label text="MY ACCOUNT" styleClass="nav-section-label">
+                        <VBox.margin><Insets top="10" bottom="2"/></VBox.margin>
+                    </Label>
+
+                    <Button fx:id="navMyCard"
+                            styleClass="nav-btn" text="💳   My Card"
+                            maxWidth="Infinity" onAction="#onNavMyCard"/>
+
+                    <Button fx:id="navMyStall"
+                            styleClass="nav-btn" text="🏪   My Stall"
+                            maxWidth="Infinity" onAction="#onNavMyStall"/>
+
+                    <Button fx:id="navProfile"
+                            styleClass="nav-btn" text="👤   Profile"
+                            maxWidth="Infinity" onAction="#onNavProfile"/>
+
+                    <Label text="MANAGEMENT" styleClass="nav-section-label">
+                        <VBox.margin><Insets top="10" bottom="2"/></VBox.margin>
+                    </Label>
+
+                    <Button fx:id="navCardMgmt"
+                            styleClass="nav-btn" text="🃏   Card Management"
+                            maxWidth="Infinity" onAction="#onNavCardMgmt"/>
+
+                    <Button fx:id="navFinance"
+                            styleClass="nav-btn" text="💰   Finance"
+                            maxWidth="Infinity" onAction="#onNavFinance"/>
+
+                    <Button fx:id="navStaff"
+                            styleClass="nav-btn" text="👥   Staff"
+                            maxWidth="Infinity" onAction="#onNavStaff"/>
+
+                    <Button fx:id="navVendors"
+                            styleClass="nav-btn" text="🤝   Vendors"
+                            maxWidth="Infinity" onAction="#onNavVendors"/>
+
+                    <Button fx:id="navReports"
+                            styleClass="nav-btn" text="📊   Reports"
+                            maxWidth="Infinity" onAction="#onNavReports"/>
+
+                    <Button fx:id="navSystem"
+                            styleClass="nav-btn" text="⚙️   System"
+                            maxWidth="Infinity" onAction="#onNavSystem"/>
+
+                </VBox>
+            </ScrollPane>
+
+            <!-- Sidebar footer — logout -->
+            <VBox styleClass="sidebar-footer" spacing="0">
+                <padding><Insets top="12" right="8" bottom="16" left="8"/></padding>
+                <Separator styleClass="sidebar-divider">
+                    <VBox.margin><Insets bottom="12"/></VBox.margin>
+                </Separator>
+                <Button text="⏻   Logout"
+                        styleClass="btn-logout"
+                        maxWidth="Infinity"
+                        onAction="#handleLogout"/>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- ── CENTER: Content Area ─────────────────────────────────────── -->
+    <!--
+        All module panels inject here via NavigationService.loadPanel().
+        AnchorPane chosen so injected panels are pinned to all four edges
+        (top/bottom/left/right = 0) and fill the space completely.
+        The sidebar is in BorderPane LEFT and is never touched by panel loads.
+    -->
+    <center>
+        <AnchorPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>
