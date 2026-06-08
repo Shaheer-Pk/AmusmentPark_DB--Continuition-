@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<!--
+    home_panel.fxml — paired with HomePanelController.java
+
+    LAYOUT: ScrollPane → VBox
+      - Page header + status label
+      - Stat cards row (each VBox card shown/hidden independently by permission)
+      - Revenue breakdown card (seperate from RevenueCard)
+        This means the breakdown DOES NOT collapse with the revenue card automatically
+        when VIEW_REVENUE is not held — no blank section visible to customers.
+      - Refresh button row
+
+    PERMISSION GATING:
+      HomePanelController.initialize() calls setVisible/setManaged on each card.
+      Revenue breakdown is inside revenueCard — collapses with it, no extra gating needed.
+      Customers see only the welcome message — all cards hidden via setManaged(false).
+
+    CSS CLASSES: verified against style.css
+      view-container, page-title, page-subtitle, field-label
+      stat-card, stat-card-green, stat-card-blue, stat-card-purple, stat-card-orange
+      stat-card-label, stat-card-value, stat-card-sub
+      card, card-title, revenue-item, revenue-item-label, revenue-item-value
+      btn-secondary
+
+    FX:ID → HomePanelController:
+      welcomeLabel, statusLabel, refreshButton
+      revenueCard, revenueBreakdownCard, ridesCard, staffCard, customersCard, stallsCard
+      totalRevenueLabel, rideRevenueLabel, cinemaRevenueLabel,
+      bowlingRevenueLabel, rentalRevenueLabel, activeRidesLabel, staffCountLabel,
+      customerCountLabel, stallCountLabel
+-->
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.amusementpark.controller.HomePanelController"
+            fitToWidth="true"
+            style="-fx-background-color: transparent;
+                   -fx-background: transparent;
+                   -fx-border-color: transparent;">
+
+    <VBox styleClass="view-container" spacing="24">
+        <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
+
+        <!-- ── Page Header ────────────────────────────────────────────── -->
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label fx:id="welcomeLabel"
+                       styleClass="page-title"
+                       text="Welcome back!"/>
+                <Label styleClass="page-subtitle"
+                       text="Here's a live overview of Apex Park operations."/>
+                <Label fx:id="statusLabel"
+                       style="-fx-text-fill: -ap-text-muted; -fx-font-size: 12px;"
+                       text=""/>
+            </VBox>
+            <Button fx:id="refreshButton"
+                    text="↻  Refresh Stats"
+                    styleClass="btn-secondary"
+                    onAction="#handleRefresh"/>
+        </HBox>
+
+        <!-- ── Stat Cards Row ─────────────────────────────────────────── -->
+        <!--
+            Each card is an independent VBox.
+            HomePanelController.initialize() calls setVisible(false) +
+            setManaged(false) on cards the user has no permission to see.
+            setManaged(false) is critical — it removes the card from HBox
+            layout entirely so no blank gap is left behind.
+        -->
+        <HBox spacing="16">
+
+            <!-- Revenue card — VIEW_REVENUE -->
+            <VBox fx:id="revenueCard"
+                  styleClass="stat-card, stat-card-green"
+                  HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="TOTAL REVENUE" styleClass="stat-card-label"/>
+                <Label fx:id="totalRevenueLabel" text="PKR —" styleClass="stat-card-value"/>
+                <Label text="Total card recharges + revntal revenue collected" styleClass="stat-card-sub"/>
+            </VBox>
+
+            <!-- Active rides — VIEW_RIDES or VIEW_ASSIGNED_RIDES -->
+            <VBox fx:id="ridesCard"
+                  styleClass="stat-card, stat-card-blue"
+                  HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="ACTIVE RIDES" styleClass="stat-card-label"/>
+                <Label fx:id="activeRidesLabel" text="—" styleClass="stat-card-value"/>
+                <Label text="Currently operational" styleClass="stat-card-sub"/>
+            </VBox>
+
+            <!-- Staff count — VIEW_STAFF -->
+            <VBox fx:id="staffCard"
+                  styleClass="stat-card, stat-card-purple"
+                  HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="TOTAL STAFF" styleClass="stat-card-label"/>
+                <Label fx:id="staffCountLabel" text="—" styleClass="stat-card-value"/>
+                <Label text="Across all departments" styleClass="stat-card-sub"/>
+            </VBox>
+
+            <!-- Customer count — VIEW_STAFF -->
+            <VBox fx:id="customersCard"
+                  styleClass="stat-card, stat-card-orange"
+                  HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="CUSTOMERS" styleClass="stat-card-label"/>
+                <Label fx:id="customerCountLabel" text="—" styleClass="stat-card-value"/>
+                <Label text="Registered accounts" styleClass="stat-card-sub"/>
+            </VBox>
+
+            <!-- Food stalls — VIEW_STALL -->
+            <VBox fx:id="stallsCard"
+                  styleClass="stat-card, stat-card-green"
+                  HBox.hgrow="ALWAYS" spacing="8">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="ACTIVE STALLS" styleClass="stat-card-label"/>
+                <Label fx:id="stallCountLabel" text="—" styleClass="stat-card-value"/>
+                <Label text="Stalls with active contracts" styleClass="stat-card-sub"/>
+            </VBox>
+
+        </HBox>
+
+        <!-- ── Revenue Breakdown Card ─────────────────────────────────── -->
+        <!--
+            INTENTIONALLY SEPARATE from the stat cards HBox above.
+            This is its own VBox with fx:id="revenueBreakdownCard".
+            HomePanelController gates it with the same VIEW_REVENUE check
+            as revenueCard — both are hidden together for non-finance users.
+            A customer sees neither the stat card nor this breakdown.
+        -->
+        <VBox fx:id="revenueBreakdownCard"
+              styleClass="card" spacing="16">
+            <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+            <Label text="Revenue Breakdown by Service" styleClass="card-title"/>
+
+            <GridPane hgap="16" vgap="12">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="25"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="25"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="25"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="25"/>
+                </columnConstraints>
+
+                <!-- Ride spend -->
+                <VBox styleClass="revenue-item" GridPane.columnIndex="0" spacing="6">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="🎢  Rides" styleClass="revenue-item-label"/>
+                    <Label fx:id="rideRevenueLabel" text="PKR —" styleClass="revenue-item-value"/>
+                </VBox>
+
+                <!-- Cinema spend -->
+                <VBox styleClass="revenue-item" GridPane.columnIndex="1" spacing="6">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="🎬  Cinema" styleClass="revenue-item-label"/>
+                    <Label fx:id="cinemaRevenueLabel" text="PKR —" styleClass="revenue-item-value"/>
+                </VBox>
+
+                <!-- Bowling spend -->
+                <VBox styleClass="revenue-item" GridPane.columnIndex="2" spacing="6">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="🎳  Bowling" styleClass="revenue-item-label"/>
+                    <Label fx:id="bowlingRevenueLabel" text="PKR —" styleClass="revenue-item-value"/>
+                </VBox>
+
+                <!-- Rental Revenue -->
+                <VBox styleClass="revenue-item" GridPane.columnIndex="3" spacing="6">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="💵 Rental" styleClass="revenue-item-label"/>
+                    <Label fx:id="rentalRevenueLabel" text="PKR —" styleClass="revenue-item-value"/>
+                </VBox>
+
+
+            </GridPane>
+        </VBox>
+
+    </VBox>
+</ScrollPane>

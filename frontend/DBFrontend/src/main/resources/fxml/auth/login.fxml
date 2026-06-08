@@ -97,7 +97,8 @@
                            style="-fx-padding: 10 0 0 0;"/>
 
                     <!-- Login button -->
-                    <Button text="Sign In"
+                    <Button fx:id = "loginButton"
+                            text="Sign In"
                             styleClass="btn-primary"
                             maxWidth="Infinity"
                             defaultButton="true"

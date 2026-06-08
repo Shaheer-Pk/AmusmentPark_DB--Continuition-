@@ -24,6 +24,7 @@ DROP TABLE IF EXISTS Movie;
 
 DROP TABLE IF EXISTS RideUsage;
 DROP TABLE IF EXISTS Ride;
+DROP TABLE IF EXISTS RideOperatorAssignment;
 
 DROP TABLE IF EXISTS FoodStall;
 DROP TABLE IF EXISTS Contract;
@@ -190,13 +191,16 @@ CREATE TABLE Ride (
     RideID INT PRIMARY KEY AUTO_INCREMENT,
     RideName VARCHAR(100) NOT NULL,
     RidePrice DECIMAL(10,2) NOT NULL,
-    IsOperational BOOLEAN DEFAULT TRUE,
+    IsOperational BOOLEAN DEFAULT TRUE
+);
 
-    OperatorStaffID INT DEFAULT NULL,
-
-    FOREIGN KEY (OperatorStaffID)
-        REFERENCES Staff(StaffID)
-        ON DELETE SET NULL
+-- A junction table to rides and their assigned staff (RideOperators)
+CREATE TABLE RideOperatorAssignment (
+    StaffID  INT NOT NULL,
+    RideID   INT NOT NULL,
+    PRIMARY KEY (StaffID, RideID),
+    FOREIGN KEY (StaffID) REFERENCES Staff(StaffID) ON DELETE CASCADE,
+    FOREIGN KEY (RideID)  REFERENCES Ride(RideID)   ON DELETE CASCADE
 );
 
 CREATE TABLE RideUsage (

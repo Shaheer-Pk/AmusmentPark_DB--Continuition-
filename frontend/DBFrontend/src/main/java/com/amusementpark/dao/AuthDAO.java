@@ -1,6 +1,7 @@
 package com.amusementpark.dao;
 
 import com.amusementpark.db.DatabaseConnection;
+import com.amusementpark.model.Card;
 import com.amusementpark.model.User;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 // AuthDAO — handles everything needed to authenticate a login attempt
 //           and load the full session data afterward.
 //
-// THREE RESPONSIBILITIES, in the order they are called during login:
+// FIVE RESPONSIBILITIES, in the order they are called during login:
 //
 //   1. authenticate(email, rawPassword)
 //      Finds the Login row, verifies the password with BCrypt.
@@ -20,16 +21,35 @@ import java.util.Set;
 //
 //   2. loadRoles(userID)
 //      Fetches all role names assigned to this user.
-//      e.g. { "Staff", "FinanceManager" }
+//      e.g. { "Staff", "RideOperator" }
 //
 //   3. loadPermissions(userID)
 //      Fetches the UNION of all permissions across all the user's roles.
 //      e.g. { "VIEW_REVENUE", "VIEW_LEDGER", "VIEW_PROFILE", "EDIT_PROFILE" }
 //      This is what SessionManager stores and what every controller queries.
 //
-// AuthController calls all three in sequence and hands the results to
-// SessionManager.initSession() to complete the login.
+//   4. loadCardDetails(userID)          — Customer only
+//      Fetches the Card row for this user. Called only when roles contains
+//      "Customer". Returns null if no Card row found (should never happen
+//      for a Customer due to trg_create_card trigger, but we handle it safely).
 //
+//   5. loadStaffID(userID)             — Staff only
+//      Fetches the StaffID from the Staff table for this user.
+//      Called only when roles contains "Staff". Returns -1 if not found.
+//      StaffID is needed by operator panels (Rides, Cinema, Bowling) to
+//      query assigned records — stored in SessionManager so no per-panel
+//      DB lookup is ever needed.
+//
+// CONNECTION STRATEGY — FIXED:
+//   Every method acquires ONE connection via getActiveConn(), uses it for the
+//   full operation, and closes it in the try-with-resources block.
+//   The previous version called getActiveConn() inside a PreparedStatement
+//   try-with-resources — closing the PS but NOT the connection. Every login
+//   call leaked connections back to HikariCP. That is fixed here.
+//
+// THREADING:
+//   All methods are called from a background Task in AuthController.
+//   Never call these on the FX Application Thread.
 // ─────────────────────────────────────────────────────────────────────────────
 public class AuthDAO {
 
@@ -39,51 +59,40 @@ public class AuthDAO {
      * Attempts to authenticate the given email and password.
      *
      * HOW IT WORKS:
-     *   1. Look up the Login row by email — fetch the stored hash and UserID.
-     *   2. Use BCrypt.checkpw() to compare the plain-text input against the hash.
-     *      BCrypt extracts the salt from the stored hash automatically —
-     *      you never store or manage the salt separately.
-     *   3. If the password matches, load and return the full User object.
+     *   1. Look up the Login row by email — fetch stored hash and UserID.
+     *   2. BCrypt.checkpw() compares plain-text input against the stored hash.
+     *      BCrypt extracts the salt from the stored hash automatically.
+     *   3. If password matches, load and return the full User object.
      *
      * WHAT IT RETURNS:
      *   The authenticated User object on success.
-     *   null if the email doesn't exist OR the password is wrong.
-     *   We intentionally give the same result for both cases — telling a user
-     *   "that email doesn't exist" is an information leak that helps attackers
-     *   enumerate valid accounts.
+     *   null if email doesn't exist OR password is wrong.
+     *   Intentionally identical result for both — avoids account enumeration.
      *
-     * @param email       the email address from the login form
-     * @param rawPassword the plain-text password from the login form
-     * @return            authenticated User, or null if credentials are invalid
+     * CONNECTION: One connection for the whole method — login query + user load.
+     * Closed by try-with-resources on the Connection, not just the Statement.
      */
     public User authenticate(String email, String rawPassword) throws SQLException {
 
-        String sql = "SELECT l.UserID, l.Password "
-                   + "FROM Login l "
-                   + "WHERE l.Email = ?";
+        String loginSql = "SELECT l.UserID, l.Password "
+                        + "FROM Login l "
+                        + "WHERE l.Email = ?";
 
-        try (PreparedStatement ps = DatabaseConnection.getActiveConn().prepareStatement(sql)) {       // A neat trick to close the 'ps' automatically after this try-block
+        try (Connection conn = DatabaseConnection.getActiveConn();
+             PreparedStatement ps = conn.prepareStatement(loginSql)) {
+
             ps.setString(1, email);
 
-            try (ResultSet rs = ps.executeQuery()) {        //ps.executeQuery returns a virtual resultSet table based on what we have executed so far
-                if (!rs.next()) {
-                    // No row found for this email — return null, not an exception.
-                    // The controller shows a generic "Invalid credentials" message.
-                    return null;
-                }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;  // No account with this email.
 
-                int    userID       = rs.getInt("UserID");
-                String storedHash   = rs.getString("Password");
+                int    userID     = rs.getInt("UserID");
+                String storedHash = rs.getString("Password");
 
-                // BCrypt.checkpw hashes rawPassword with the salt embedded in
-                // storedHash and compares the result. Never do a plain string
-                // comparison on passwords — BCrypt handles timing-safe comparison.
-                if (!BCrypt.checkpw(rawPassword, storedHash)) {
-                    return null;  // Wrong password — same response as wrong email.
-                }
+                if (!BCrypt.checkpw(rawPassword, storedHash)) return null;  // Wrong password.
 
-                // Credentials valid — load and return the full User object.
-                return loadUser(DatabaseConnection.getActiveConn(), userID);
+                // Credentials valid — load the full User on the same connection.
+                return loadUser(conn, userID);
             }
         }
     }
@@ -94,7 +103,7 @@ public class AuthDAO {
      * Loads all role names assigned to the given user.
      * Called immediately after authenticate() succeeds.
      *
-     * Example result: { "Staff", "FinanceManager" }
+     * Example result: { "Staff", "RideOperator" }
      *
      * @param userID the authenticated user's ID
      * @return set of role name strings — empty set if none assigned
@@ -108,7 +117,9 @@ public class AuthDAO {
 
         Set<String> roles = new HashSet<>();
 
-        try (PreparedStatement ps = DatabaseConnection.getActiveConn().prepareStatement(sql)) {   
+        try (Connection conn = DatabaseConnection.getActiveConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, userID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -121,25 +132,19 @@ public class AuthDAO {
 
     /**
      * Loads the effective permission set for the given user.
-     * This is the UNION of all permissions across ALL of the user's roles.
+     * UNION of all permissions across ALL of the user's roles.
      * Called immediately after loadRoles() succeeds.
      *
-     * HOW THE UNION WORKS IN SQL:
-     *   We join UserRole → RolePermission → Permission in one query.
-     *   If the user has roles Staff and FinanceManager, we get every
-     *   permission mapped to either role in a single result set.
-     *   DISTINCT ensures duplicates are collapsed — if two roles share
-     *   VIEW_PROFILE, it only appears once in the result.
+     * DISTINCT collapses duplicates — if two roles share VIEW_PROFILE,
+     * it appears only once in the result set.
      *
-     * Example result: { "VIEW_REVENUE", "VIEW_LEDGER", "VIEW_PROFILE", "EDIT_PROFILE" }
+     * Example result: { "VIEW_REVENUE", "VIEW_LEDGER", "EDIT_PROFILE" }
      *
      * @param userID the authenticated user's ID
      * @return set of permission name strings — empty set if none assigned
      */
     public Set<String> loadPermissions(int userID) throws SQLException {
 
-        // Walk the full RBAC chain:
-        // User → UserRole → RolePermission → Permission
         String sql = "SELECT DISTINCT p.PermissionName "
                    + "FROM UserRole ur "
                    + "JOIN RolePermission rp ON ur.RoleID = rp.RoleID "
@@ -148,7 +153,9 @@ public class AuthDAO {
 
         Set<String> permissions = new HashSet<>();
 
-        try (PreparedStatement ps = DatabaseConnection.getActiveConn().prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getActiveConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, userID);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -159,11 +166,93 @@ public class AuthDAO {
         return permissions;
     }
 
+    /**
+     * Loads the Card row for the given user.
+     *
+     * WHY THIS EXISTS:
+     *   Every purchase stored procedure (PurchaseRide, PurchaseTicket,
+     *   StartBowlingSession) requires a CardID. Rather than querying Card
+     *   in every panel's purchase handler, we load it once at login and
+     *   store it in SessionManager. Controllers call session.getCard().getCardID().
+     *
+     * WHEN TO CALL:
+     *   Only when roles.contains("Customer") in AuthController.
+     *   Staff and Vendor never get a Card loaded into session.
+     *
+     * WHAT IF NO CARD ROW EXISTS:
+     *   For a Customer this should never happen — trg_create_card fires on
+     *   every User insert and creates the Card row automatically. But we
+     *   return null safely rather than throwing — AuthController handles it.
+     *
+     * @param userID the authenticated customer's UserID
+     * @return Card object if found, null if no card exists for this user
+     */
+    public Card loadCardDetails(int userID) throws SQLException {
+
+        String sql = "SELECT CardID, Balance, LoyaltyPoints, IsActive "
+                   + "FROM Card WHERE UserID = ?";
+
+        try (Connection conn = DatabaseConnection.getActiveConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Card(
+                        rs.getInt("CardID"),
+                        rs.getBigDecimal("Balance"),
+                        rs.getInt("LoyaltyPoints"),
+                        rs.getBoolean("IsActive")
+                    );
+                }
+                return null;  // No card found — caller handles this case.
+            }
+        }
+    }
+
+    /**
+     * Loads the StaffID for the given user from the Staff table.
+     *
+     * WHY THIS EXISTS:
+     *   Operator panels (Rides, Cinema, Bowling) need StaffID to query
+     *   records assigned to the logged-in operator. Loaded once at login,
+     *   stored in SessionManager. Controllers call session.getStaffID().
+     *   No per-panel Staff table lookup ever needed.
+     *
+     * WHEN TO CALL:
+     *   Only when roles.contains("Staff") in AuthController.
+     *   Customers and Vendors never have a Staff row.
+     *
+     * @param userID the authenticated staff member's UserID
+     * @return the StaffID, or -1 if no Staff row found for this UserID
+     */
+    public int loadStaffID(int userID) throws SQLException {
+
+        String sql = "SELECT StaffID FROM Staff WHERE UserID = ?";
+
+        try (Connection conn = DatabaseConnection.getActiveConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("StaffID");
+                return -1;  // No Staff row — caller stores -1 in session.
+            }
+        }
+    }
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     /**
      * Loads the full User object from the User table by ID.
-     * Called internally after password verification succeeds.
+     * Called internally by authenticate() on the same connection —
+     * avoids opening a second connection just to load the user row.
+     *
+     * NOTE: Uses rs.getDate("DateOfBirth").toLocalDate() for the date field.
+     * This is acceptable here because we're reading from MySQL (which stores
+     * DATE as yyyy-MM-dd) and converting immediately to LocalDate. We never
+     * store a java.sql.Date in the model. See UserDAO for why we use
+     * ps.setObject() with LocalDate on writes.
      */
     private User loadUser(Connection conn, int userID) throws SQLException {
 
@@ -179,11 +268,10 @@ public class AuthDAO {
                         rs.getString("FirstName"),
                         rs.getString("LastName"),
                         rs.getString("PhoneNumber"),
-                        rs.getDate("DateOfBirth").toLocalDate()  // java.sql.Date → LocalDate
+                        rs.getDate("DateOfBirth").toLocalDate()
                     );
                 }
-                // UserID came from the Login table — if User row is missing,
-                // the database has an integrity violation. Fail loudly.
+                // UserID came from Login table — User row missing = integrity violation.
                 throw new SQLException("User row not found for UserID: " + userID);
             }
         }

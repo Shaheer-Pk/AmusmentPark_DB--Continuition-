@@ -56,9 +56,10 @@ public class UserDAO {
      * @param email       login email — must be unique
      * @param rawPassword plain-text password — hashed before storing
      * @param roleName    either "Customer" or "Vendor"
+     * @return            returns userID to be utilized when creating a specialized staff account in staff_panel
      * @throws SQLException if the email already exists or any DB error occurs
      */
-    public void createUser(String firstName, String lastName, String phone,
+    public int createUser(String firstName, String lastName, String phone,
                            LocalDate dob, String email, String rawPassword,
                            String roleName) throws SQLException {
 
@@ -85,6 +86,8 @@ public class UserDAO {
 
             // All three succeeded — persist to disk.
             conn.commit();
+
+            return userID;      // Ignored by signUpController but utilized by Staff-setup Panel
 
         } catch (SQLException e) {
             // Something failed — undo every insert made in this block.

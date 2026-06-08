@@ -59,6 +59,7 @@ INSERT INTO Permission (PermissionName, Description) VALUES
 ('CREATE_RIDE', 'Create ride'),
 ('UPDATE_RIDE', 'Update ride'),
 ('DELETE_RIDE', 'Delete ride'),
+('ASSIGN_RIDE_OPERATOR', 'View and Edit RideOperators assigned to rides'),
 
 -- Ride Operations
 ('VIEW_ASSIGNED_RIDES', 'View assigned rides'),
@@ -177,6 +178,9 @@ AND p.PermissionName IN (
 
 -- RIDE MANAGER
 
+-- He has all powers as ride-operator except for
+-- VIEW_ASSIGNED_RIDES as he is meant to oversee
+-- ALL operators
 INSERT INTO RolePermission
 SELECT r.RoleID, p.PermissionID
 FROM Role r, Permission p
@@ -184,7 +188,10 @@ WHERE r.RoleName = 'RideManager'
 AND p.PermissionName IN (
     'CREATE_RIDE',
     'UPDATE_RIDE',
-    'DELETE_RIDE'
+    'DELETE_RIDE',
+    'UPDATE_RIDE_STATUS',
+    'VIEW_RIDE_USAGE',
+    'ASSIGN_RIDE_OPERATOR'
 );
 
 -- CINEMA OPERATOR
@@ -257,7 +264,10 @@ AND p.PermissionName IN (
 INSERT INTO RolePermission
 SELECT r.RoleID, p.PermissionID
 FROM Role r, Permission p
-WHERE r.RoleName='Admin';
+WHERE r.RoleName='Admin'
+AND p.PermissionName NOT IN (
+'VIEW_ASSIGNED_RIDES'
+);
 
 -- =========================
 -- SEEDING INITIAL ADMIN
@@ -282,6 +292,9 @@ SELECT 1, RoleID FROM Role WHERE RoleName = 'Staff';        -- The boot-strapped
 
 -- Its better to use UNION as this sends it as one INSERT reducing overhead, sort of like VALUES ((val1), (val2),....) 
 
+INSERT INTO Staff (UserID, Title, Salary) VALUES
+(1, 'Administrator', 1000000);
+
 -- =========================
 -- STATIC ENTERTAINMENT DATA
 -- =========================
@@ -305,10 +318,10 @@ INSERT INTO Seat (HallID, SeatNumber)
 SELECT 2, CONCAT('B', n)
 FROM (SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) x;
 
-INSERT INTO Ride (RideName, RidePrice, IsOperational, OperatorStaffID) VALUES
-('Roller Coaster', 800, TRUE, NULL),
-('Haunted House', 500, TRUE, NULL),
-('Ferris Wheel', 300, TRUE, NULL);
+INSERT INTO Ride (RideName, RidePrice, IsOperational) VALUES
+('Roller Coaster', 800, TRUE),
+('Haunted House', 500, TRUE),
+('Ferris Wheel', 300, TRUE);
 
 INSERT INTO BowlingLane (LaneNumber, HourlyRate, IsOperational, IsAvailable) VALUES
 (1, 1000, TRUE, TRUE),

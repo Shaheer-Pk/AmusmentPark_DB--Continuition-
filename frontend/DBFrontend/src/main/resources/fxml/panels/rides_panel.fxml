@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<!--
+    rides_panel.fxml  —  paired with RidesPanelController.java
+
+    LAYOUT: ScrollPane → VBox
+      - Page header + status label + refresh button
+      - Management toolbar  (CREATE_RIDE)
+      - Ride TableView      (3 columns: Name | Price | Status)
+      - Customer action bar (PURCHASE_RIDE)
+      - Operator action bar (UPDATE_RIDE_STATUS)
+      - Manager action bar  (UPDATE_RIDE | DELETE_RIDE | ASSIGN_RIDE_OPERATOR)
+
+    COLUMNS:
+      colName   — ride name
+      colPrice  — PKR formatted price
+      colStatus — Operational / Offline
+      colOperator is REMOVED. Operator data is fetched on demand only when
+      a RideManager opens the assignment dialog for a specific ride.
+
+    ACTIONS → RidesPanelController:
+      handleRefresh()
+      handleCreateRide()
+      handlePurchase()
+      handleMarkOperational(), handleMarkOffline()
+      handleEditRide()
+      handleDeleteRide()
+      handleViewEditOperators()
+
+    FX:ID → RidesPanelController fields:
+      statusLabel, refreshButton
+      managementToolbar, newRideNameField, newRidePriceField, createRideButton
+      rideTable, colName, colPrice, colStatus
+      customerActionBar, purchaseButton
+      operatorActionBar, markOperationalBtn, markOfflineBtn
+      managerActionBar, editRideButton, deleteRideButton, assignOperatorButton
+-->
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.amusementpark.controller.RidesPanelController"
+            fitToWidth="true"
+            style="-fx-background-color: transparent;
+                   -fx-background: transparent;
+                   -fx-border-color: transparent;">
+
+    <VBox styleClass="view-container" spacing="20">
+        <padding><Insets top="32" right="32" bottom="32" left="32"/></padding>
+
+        <!-- ── Page Header ────────────────────────────────────────────── -->
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="🎢  Rides" styleClass="page-title"/>
+                <Label fx:id="statusLabel"
+                       styleClass="page-subtitle"
+                       text="Loading rides..."/>
+            </VBox>
+            <Button fx:id="refreshButton"
+                    text="↻  Refresh"
+                    styleClass="btn-secondary"
+                    onAction="#handleRefresh"/>
+        </HBox>
+
+        <!-- ── Management Toolbar (CREATE_RIDE) ──────────────────────── -->
+        <HBox fx:id="managementToolbar"
+              styleClass="toolbar"
+              spacing="12" alignment="CENTER_LEFT">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+
+            <Label text="Add New Ride" styleClass="field-label"/>
+
+            <TextField fx:id="newRideNameField"
+                       styleClass="text-field-flat"
+                       promptText="Ride name"
+                       prefWidth="200"/>
+
+            <TextField fx:id="newRidePriceField"
+                       styleClass="text-field-flat"
+                       promptText="Price (PKR)"
+                       prefWidth="140"/>
+
+            <Button fx:id="createRideButton"
+                    text="+ Add Ride"
+                    styleClass="btn-primary"
+                    onAction="#handleCreateRide"/>
+        </HBox>
+
+        <!-- ── Rides Table ────────────────────────────────────────────── -->
+        <VBox styleClass="card" spacing="12">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <Label text="Ride List" styleClass="card-title"/>
+
+            <TableView fx:id="rideTable"
+                       styleClass="flat-table"
+                       prefHeight="380">
+
+                <columns>
+                    <TableColumn fx:id="colName"
+                                 text="Ride Name"
+                                 prefWidth="280"/>
+
+                    <TableColumn fx:id="colPrice"
+                                 text="Price"
+                                 prefWidth="160"/>
+
+                    <TableColumn fx:id="colStatus"
+                                 text="Status"
+                                 prefWidth="150"/>
+                </columns>
+
+                <placeholder>
+                    <Label text="No rides to display."
+                           styleClass="table-placeholder"/>
+                </placeholder>
+
+            </TableView>
+        </VBox>
+
+        <!-- ── Customer Action Bar (PURCHASE_RIDE) ───────────────────── -->
+        <HBox fx:id="customerActionBar"
+              styleClass="toolbar"
+              spacing="12" alignment="CENTER_LEFT">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+
+            <Label text="Select a ride above and click Purchase."
+                   styleClass="record-count-label"
+                   HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="purchaseButton"
+                    text="🎟  Purchase Ride"
+                    styleClass="btn-primary"
+                    onAction="#handlePurchase"/>
+        </HBox>
+
+        <!-- ── Operator Action Bar (UPDATE_RIDE_STATUS) ──────────────── -->
+        <!--
+            Shown to RideOperator AND RideManager — both hold UPDATE_RIDE_STATUS.
+        -->
+        <HBox fx:id="operatorActionBar"
+              styleClass="toolbar"
+              spacing="12" alignment="CENTER_LEFT">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+
+            <Label text="Select a ride to update its operational status."
+                   styleClass="record-count-label"
+                   HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="markOperationalBtn"
+                    text="✔  Mark Operational"
+                    styleClass="btn-edit"
+                    onAction="#handleMarkOperational"/>
+
+            <Button fx:id="markOfflineBtn"
+                    text="✖  Take Offline"
+                    styleClass="btn-danger"
+                    onAction="#handleMarkOffline"/>
+        </HBox>
+
+        <!-- ── Manager Action Bar ─────────────────────────────────────── -->
+        <!--
+            HBox visible if user holds ANY of: UPDATE_RIDE, DELETE_RIDE,
+            ASSIGN_RIDE_OPERATOR. Individual buttons further gated inside
+            the controller so partial-permission roles only see what they own.
+        -->
+        <HBox fx:id="managerActionBar"
+              styleClass="toolbar"
+              spacing="12" alignment="CENTER_RIGHT">
+            <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+
+            <Label text="Select a ride to manage."
+                   styleClass="record-count-label"
+                   HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="assignOperatorButton"
+                    text="👤  View / Edit Operators"
+                    styleClass="btn-secondary"
+                    onAction="#handleViewEditOperators"/>
+
+            <Button fx:id="editRideButton"
+                    text="✎  Edit Ride"
+                    styleClass="btn-edit"
+                    onAction="#handleEditRide"/>
+
+            <Button fx:id="deleteRideButton"
+                    text="🗑  Delete Ride"
+                    styleClass="btn-danger"
+                    onAction="#handleDeleteRide"/>
+        </HBox>
+
+    </VBox>
+</ScrollPane>

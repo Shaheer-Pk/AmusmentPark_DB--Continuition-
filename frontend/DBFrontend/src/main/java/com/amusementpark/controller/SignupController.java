@@ -4,7 +4,10 @@ import com.amusementpark.dao.UserDAO;
 import com.amusementpark.navigation.NavigationService;
 import com.amusementpark.navigation.ViewType;
 import com.amusementpark.util.AlertHelper;
+
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -35,6 +38,11 @@ import java.time.format.DateTimeParseException;
 //   - No password hashing (UserDAO + BCrypt handles that)
 //   - No direct SQL
 //   - No session initialisation (user must log in after registering)
+//
+// THREADING:
+//   handleSubmit() fires one background Task named signupTask for userDAO queries.
+//   onSucceeded pushes results back successful account creation to FX thread for label updates.
+//   onFailed pushes account creation failure message to FX thread for label updates.
 // ─────────────────────────────────────────────────────────────────────────────
 public class SignupController {
 
@@ -48,6 +56,8 @@ public class SignupController {
     @FXML private TextField     emailField;
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
+    @FXML private Button submitBtn;       
+    @FXML private Button goBackBtn;
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -105,7 +115,7 @@ public class SignupController {
         }
 
         // ── The Absolute Control Wringer: Parse raw text to LocalDate ──────────
-        LocalDate dob = null;
+        LocalDate dob;
         try {
             // Enforce strict ISO-8601 layout (yyyy-MM-dd)
             DateTimeFormatter strictFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -144,31 +154,72 @@ public class SignupController {
         /**
          * This is the point mentioned in UserDAO.java which can create the ghost id
          * Due to e.getErrorCode() == 1062
+         * We offload this task to a worker thread using Task
          */
         // ── Attempt DB insert ─────────────────────────────────────────────────
-        try {
-            userDAO.createUser(firstName, lastName, phone, dob, email, password, role);
 
+        // Disable the buttons to prevent double-clicking potentially interrupting the task below
+        if (submitBtn != null) submitBtn.setDisable(true);
+        if (goBackBtn != null) goBackBtn.setDisable(true);
+
+        Task<Void> signupTask = new Task<>() {
+            @Override
+            protected Void call() throws SQLException {
+                //Safe backend database transaction offloaded to a worker thread
+                userDAO.createUser(firstName, lastName, phone, dob, email, password, role);
+                return null;
+            }
+        };
+
+        /*
+         * Based on how task is executed now we communicate 
+         * it back to the single UI JavaFX thread  
+         */
+        signupTask.setOnSucceeded(event -> {
             // Success — tell the user, then go back to login.
             AlertHelper.showInfo("Account Created",
                 "Your " + role + " account has been created. Please log in.");
             NavigationService.navigateTo(ViewType.LOGIN);
+        });
 
-        } catch (SQLException e) {
+        signupTask.setOnFailed(event -> {
+            Throwable exception = signupTask.getException();
 
-            // MySQL error code 1062 = duplicate entry on a UNIQUE column.
-            // The Login table has UNIQUE on Email — this is the "already registered" case.
-            if (e.getErrorCode() == 1062) {
-                AlertHelper.showError("Email Taken",
-                    "An account with this email already exists.");
-            } else {
-                // Unexpected DB error — show generic message to user,
-                // print full trace to console for the developer.
-                AlertHelper.showError("Registration Failed",
-                    "Something went wrong. Please try again.");
-                e.printStackTrace();
+            
+
+            if (exception instanceof SQLException e) {
+                // MySQL error code 1062 = duplicate entry on a UNIQUE column.
+                // The Login table has UNIQUE on Email — this is the "already registered" case.
+                if (e.getErrorCode() == 1062) {
+                    AlertHelper.showError("Email Taken",
+                        "An account with this email already exists.");
+                } else {
+                    // Unexpected DB error — show generic message to user,
+                    // print full trace to console for the developer.
+                    AlertHelper.showError("Registration Failed",
+                        "Something went wrong. Please try again.");
+                    e.printStackTrace();
+                }
             }
-        }
+            else {
+                // CATCH-ALL FOR UNEXPECTED FAILS: (NPEs, ClassNotFound, OutOfMemory, etc.)
+                AlertHelper.showError("System Error", 
+                    "An unexpected application error occurred: " + exception.getMessage());
+                exception.printStackTrace();
+            }
+
+            // Reset the buttons back so user can fix his errors and retry again
+            submitBtn.setDisable(false);
+            goBackBtn.setDisable(false); 
+        });
+
+        // ── Run the Task on a daemon thread ────────────────────────────────────
+        // Daemon = JVM won't wait for this thread to finish on shutdown.
+        // A thread pool (e.g. ExecutorService) would be cleaner at scale,
+        // but for a single login flow a daemon thread is sufficient.
+        Thread thread = new Thread(signupTask);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     // ── Back Navigation ───────────────────────────────────────────────────────
